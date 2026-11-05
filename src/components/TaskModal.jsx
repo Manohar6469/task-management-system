@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatDate, addDays } from '../utils/deadlineUtils';
 
 export default function TaskModal({ isOpen, taskToEdit = null, onClose }) {
-  const { createTask, updateTask, simulatedDate } = useTasks();
+  const { createTask, updateTask, simulatedDate, courses = [] } = useTasks();
   const { users, currentUser, isAdmin } = useAuth();
 
   const isEditMode = !!taskToEdit;
@@ -168,12 +168,18 @@ export default function TaskModal({ isOpen, taskToEdit = null, onClose }) {
               </label>
               <input
                 type="text"
+                list="task-modal-course-list"
                 required
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
-                placeholder="e.g. CS510 Machine Learning"
+                placeholder="Select or enter course..."
                 className="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900 dark:text-white"
               />
+              <datalist id="task-modal-course-list">
+                {courses.map(c => (
+                  <option key={c.id} value={c.name}>{c.code} - {c.department}</option>
+                ))}
+              </datalist>
             </div>
 
             {isAdmin ? (

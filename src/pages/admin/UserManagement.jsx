@@ -93,7 +93,7 @@ export default function UserManagement() {
     setError('');
   };
 
-  const handleSaveUser = (e) => {
+  const handleSaveUser = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -109,11 +109,11 @@ export default function UserManagement() {
         if (formData.password) {
           updates.password = formData.password;
         }
-        adminUpdateUser(selectedUserForEdit.id, updates);
+        await adminUpdateUser(selectedUserForEdit.id, updates);
         setSelectedUserForEdit(null);
       } else {
         // Add mode
-        adminAddUser(formData);
+        await adminAddUser(formData);
         setShowAddModal(false);
       }
     } catch (err) {
@@ -300,7 +300,7 @@ export default function UserManagement() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          {!isCurrent && (
+                          {!isCurrent && !user.isPrimaryAdmin && user.username?.toLowerCase() !== 'manohar' && (
                             <button
                               onClick={() => setUserToDelete(user)}
                               className="p-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"

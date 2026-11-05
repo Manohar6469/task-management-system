@@ -4,6 +4,8 @@ import {
   saveStoredTasks,
   getStoredNotifications,
   saveStoredNotifications,
+  getStoredCourses,
+  saveStoredCourses,
 } from '../utils/localStorage';
 import {
   formatDate,
@@ -27,6 +29,7 @@ const TaskContext = createContext();
 export function TaskProvider({ children }) {
   const { currentUser } = useAuth();
   const [tasks, setTasks] = useState(() => getStoredTasks());
+  const [courses, setCourses] = useState(() => getStoredCourses());
   const [notifications, setNotifications] = useState(() => getStoredNotifications());
   const [simulatedDate, setSimulatedDateState] = useState(() => getSimulatedOrCurrentDate());
 
@@ -34,6 +37,12 @@ export function TaskProvider({ children }) {
   const syncTasks = useCallback((newTasks) => {
     setTasks(newTasks);
     saveStoredTasks(newTasks);
+  }, []);
+
+  // Helper to sync courses to localStorage
+  const syncCourses = useCallback((newCourses) => {
+    setCourses(newCourses);
+    saveStoredCourses(newCourses);
   }, []);
 
   // Helper to sync notifications to localStorage
@@ -89,6 +98,52 @@ export function TaskProvider({ children }) {
     evaluateDeadlines(simulatedDate);
   }, [simulatedDate, evaluateDeadlines]);
 
+  // COURSE MANAGEMENT (Primary Admin permissions)
+  const createCourse = (courseData) => {
+    const newCourse = {
+      id: `COURSE-${Date.now().toString(36).toUpperCase()}`,
+      code: courseData.code?.trim().toUpperCase() || 'CRS',
+      name: courseData.name?.trim() || `${courseData.code} Course`,
+      department: courseData.department?.trim() || 'General',
+      description: courseData.description?.trim() || '',
+      createdAt: formatDate(new Date()),
+    };
+
+    const updated = [newCourse, ...courses];
+    syncCourses(updated);
+    return newCourse;
+  };
+
+  const updateCourse = (courseId, updatedFields) => {
+    const prevCourse = courses.find(c => c.id === courseId);
+    const oldName = prevCourse?.name;
+    const newName = updatedFields.name?.trim();
+
+    const updatedCourses = courses.map(c => {
+      if (c.id === courseId) {
+        return { ...c, ...updatedFields };
+      }
+      return c;
+    });
+    syncCourses(updatedCourses);
+
+    // If course name changed, cascade update to tasks referencing this course
+    if (oldName && newName && oldName !== newName) {
+      const updatedTasks = tasks.map(t => {
+        if (t.courseName === oldName) {
+          return { ...t, courseName: newName };
+        }
+        return t;
+      });
+      syncTasks(updatedTasks);
+    }
+  };
+
+  const deleteCourse = (courseId) => {
+    const updated = courses.filter(c => c.id !== courseId);
+    syncCourses(updated);
+  };
+
   // Create Task
   const createTask = (taskData) => {
     const today = simulatedDate || formatDate(new Date());
@@ -105,7 +160,7 @@ export function TaskProvider({ children }) {
       assignedUserId: taskData.assignedUserId,
       priority: taskData.priority || 'Medium',
       progressStatus: taskData.progressStatus || 'To Do',
-      deadlineStatus: 'Normal', // will be evaluated immediately below
+      deadlineStatus: 'Normal', // evaluated below
       createdAt: createdAt,
       duration: duration,
       originalDeadline: originalDeadline,
@@ -177,11 +232,9 @@ export function TaskProvider({ children }) {
           return next;
         });
       } else if (task.progressStatus === 'Completed' && updatedFields.progressStatus && updatedFields.progressStatus !== 'Completed') {
-        // If moving back from Completed to In Progress / To Do, recalculate deadlineStatus
         merged.completedAt = null;
         merged.deadlineStatus = calculateDeadlineStatus(merged, today);
       } else {
-        // Re-evaluate deadlineStatus for normal updates
         merged.deadlineStatus = calculateDeadlineStatus(merged, today);
       }
 
@@ -234,15 +287,12 @@ export function TaskProvider({ children }) {
         rescheduleHistory: updatedHistory,
       };
 
-      // Rule 7: Re-evaluate deadline tracking for the new deadline
       rescheduledTask.deadlineStatus = calculateDeadlineStatus(rescheduledTask, today);
-
       return rescheduledTask;
     });
 
     syncTasks(updatedTasks);
 
-    // Add rescheduling notification
     const targetTask = tasks.find(t => t.id === taskId);
     if (targetTask) {
       const notif = {
@@ -302,8 +352,12 @@ export function TaskProvider({ children }) {
     <TaskContext.Provider
       value={{
         tasks,
+        courses,
         notifications,
         simulatedDate,
+        createCourse,
+        updateCourse,
+        deleteCourse,
         createTask,
         updateTask,
         deleteTask,

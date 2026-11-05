@@ -17,6 +17,7 @@ import {
   X,
   Sparkles,
   Shield,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
@@ -41,6 +42,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const adminNavItems = [
     { label: 'Admin Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Course Management', to: '/admin/courses', icon: BookOpen },
     { label: 'User Management', to: '/admin/users', icon: Users },
     { 
       label: 'Task Management', 

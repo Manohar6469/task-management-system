@@ -35,13 +35,13 @@ export default function Signup() {
     }
   }, [currentUser, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const user = signup({
+      const user = await signup({
         fullName,
         email,
         password,

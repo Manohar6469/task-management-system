@@ -6,49 +6,118 @@ export const STORAGE_KEYS = {
   SESSION: 'taskflow_session',
   NOTIFICATIONS: 'taskflow_notifications',
   THEME: 'taskflow_theme',
+  COURSES: 'taskflow_courses',
+  ADMIN_SETUP: 'taskflow_admin_setup_completed',
 };
 
-// Initial Seed Users
-const INITIAL_USERS = [
-  {
-    id: 'USER_ADMIN',
-    fullName: 'System Administrator',
-    email: 'admin@taskflow.com',
-    password: 'Admin@123',
-    role: 'Admin',
-    department: 'Computer Science Faculty',
-    createdAt: '2026-09-01',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  },
+// SHA-256 hash for seed student accounts (password: 'User@123', salt: 'taskflow_secure_salt_2026')
+const SEED_STUDENT_PASSWORD_HASH = 'fccef0a918088868c74e620cc2ebdda4a553f34e6b7811943ace4e80b06a6b88';
+
+// Initial Seed Users (Students only - no hardcoded admin credentials)
+const INITIAL_STUDENT_USERS = [
   {
     id: 'USER_001',
+    username: 'alex',
     fullName: 'Alex Rivera',
     email: 'alex@student.com',
-    password: 'User@123',
+    passwordHash: SEED_STUDENT_PASSWORD_HASH,
     role: 'User',
     department: 'Software Engineering',
     createdAt: '2026-10-01',
     avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    isPrimaryAdmin: false,
   },
   {
     id: 'USER_002',
+    username: 'sarah',
     fullName: 'Sarah Jenkins',
     email: 'sarah@student.com',
-    password: 'User@123',
+    passwordHash: SEED_STUDENT_PASSWORD_HASH,
     role: 'User',
     department: 'Data Science',
     createdAt: '2026-10-10',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    isPrimaryAdmin: false,
   },
   {
     id: 'USER_003',
+    username: 'david',
     fullName: 'David Chen',
     email: 'david@student.com',
-    password: 'User@123',
+    passwordHash: SEED_STUDENT_PASSWORD_HASH,
     role: 'User',
     department: 'Artificial Intelligence',
     createdAt: '2026-10-15',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    isPrimaryAdmin: false,
+  },
+];
+
+// Initial Seed Courses for Admin Course Management
+const INITIAL_COURSES = [
+  {
+    id: 'COURSE-001',
+    code: 'CS450',
+    name: 'CS450 Distributed Systems',
+    department: 'Software Engineering',
+    description: 'Paxos consensus, Raft cluster election algorithms, replication models, and distributed network partitions.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-002',
+    code: 'CS510',
+    name: 'CS510 Advanced Machine Learning',
+    department: 'Artificial Intelligence',
+    description: 'Ensemble methods, deep neural networks, hyperparameter optimization, and Bayesian validation.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-003',
+    code: 'CS340',
+    name: 'CS340 Database Management',
+    department: 'Computer Science',
+    description: 'Relational schema design, B-Tree indices, query optimization, and transaction ACID properties.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-004',
+    code: 'CS460',
+    name: 'CS460 Computer Vision',
+    department: 'Computer Science',
+    description: 'Object detection, YOLOv8 model benchmarks, convolutional feature extractors, and pedestrian tracking.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-005',
+    code: 'CS410',
+    name: 'CS410 Compiler Construction',
+    department: 'Computer Science',
+    description: 'Intermediate three-address code representation, basic block loop optimizations, and LLVM IR generation.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-006',
+    code: 'CS480',
+    name: 'CS480 Cybersecurity',
+    department: 'Cybersecurity',
+    description: 'Static vulnerability audits, cross-site scripting (XSS) remediation, and secure session management.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-007',
+    code: 'BIO300',
+    name: 'BIO300 Computational Biology',
+    department: 'Bioinformatics',
+    description: 'RNA-Seq differential gene expression analysis, volcano plots, and DESeq2 normalization in R.',
+    createdAt: '2026-09-01',
+  },
+  {
+    id: 'COURSE-008',
+    code: 'CS530',
+    name: 'CS530 Reinforcement Learning',
+    department: 'Artificial Intelligence',
+    description: 'Deep Q-Networks (DQN), experience replay buffers, and dynamic grid obstacle path optimization.',
+    createdAt: '2026-09-01',
   },
 ];
 
@@ -59,7 +128,7 @@ function getRelativeDate(offsetDays) {
   return formatDate(d);
 }
 
-// Initial Seed Tasks demonstrating all rules
+// Initial Seed Tasks
 const INITIAL_TASKS = [
   // 30-day task created 26 days ago -> Day 26: OVERDUE (30 - 5 = 25 threshold)
   {
@@ -279,19 +348,59 @@ const INITIAL_NOTIFICATIONS = [
 export function getStoredUsers() {
   const data = localStorage.getItem(STORAGE_KEYS.USERS);
   if (!data) {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
-    return INITIAL_USERS;
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_STUDENT_USERS));
+    return INITIAL_STUDENT_USERS;
   }
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Remove legacy generic demo admin if present
+    const cleaned = parsed.filter(u => u.email !== 'admin@taskflow.com' || u.username === 'Manohar');
+    return cleaned;
   } catch (e) {
     console.error('Error parsing stored users', e);
-    return INITIAL_USERS;
+    return INITIAL_STUDENT_USERS;
   }
 }
 
 export function saveStoredUsers(users) {
-  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  // Never save plaintext passwords
+  const sanitized = users.map(u => {
+    const copy = { ...u };
+    delete copy.password;
+    return copy;
+  });
+  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(sanitized));
+}
+
+export function getStoredCourses() {
+  const data = localStorage.getItem(STORAGE_KEYS.COURSES);
+  if (!data) {
+    localStorage.setItem(STORAGE_KEYS.COURSES, JSON.stringify(INITIAL_COURSES));
+    return INITIAL_COURSES;
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Error parsing stored courses', e);
+    return INITIAL_COURSES;
+  }
+}
+
+export function saveStoredCourses(courses) {
+  localStorage.setItem(STORAGE_KEYS.COURSES, JSON.stringify(courses));
+}
+
+export function isAdminSetupCompleted() {
+  const stored = localStorage.getItem(STORAGE_KEYS.ADMIN_SETUP);
+  if (stored === 'true') return true;
+  // Also verify if a primary admin user with username Manohar exists in users list
+  const users = getStoredUsers();
+  const primaryAdmin = users.find(u => (u.username?.toLowerCase() === 'manohar' || u.role === 'Admin') && u.passwordHash);
+  return !!primaryAdmin;
+}
+
+export function setAdminSetupCompleted(status) {
+  localStorage.setItem(STORAGE_KEYS.ADMIN_SETUP, status ? 'true' : 'false');
 }
 
 export function getStoredTasks() {
@@ -322,7 +431,10 @@ export function getStoredSession() {
   const data = localStorage.getItem(STORAGE_KEYS.SESSION);
   if (!data) return null;
   try {
-    return JSON.parse(data);
+    const session = JSON.parse(data);
+    // Sanitize session to ensure no password is present
+    delete session.password;
+    return session;
   } catch (e) {
     return null;
   }
@@ -330,7 +442,10 @@ export function getStoredSession() {
 
 export function saveStoredSession(session) {
   if (session) {
-    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+    const sanitized = { ...session };
+    delete sanitized.password;
+    delete sanitized.passwordHash;
+    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sanitized));
   } else {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
   }

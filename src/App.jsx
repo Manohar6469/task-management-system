@@ -9,9 +9,11 @@ import AppLayout from './components/AppLayout';
 // Auth Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import AdminSetup from './pages/AdminSetup';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import CourseManagement from './pages/admin/CourseManagement';
 import UserManagement from './pages/admin/UserManagement';
 import TaskManagement from './pages/admin/TaskManagement';
 import Reports from './pages/admin/Reports';
@@ -50,6 +52,7 @@ export default function App() {
               <Route path="/" element={<RootRedirect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/admin-setup" element={<AdminSetup />} />
 
               {/* Admin Portal Routes */}
               <Route
@@ -62,6 +65,7 @@ export default function App() {
               >
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="courses" element={<CourseManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="tasks" element={<TaskManagement />} />
                 <Route path="reports" element={<Reports />} />

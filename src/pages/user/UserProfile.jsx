@@ -58,7 +58,7 @@ export default function UserProfile() {
     }
   };
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
     setPasswordSuccess('');
@@ -79,8 +79,8 @@ export default function UserProfile() {
     }
 
     try {
-      changePassword(currentPassword, newPassword);
-      setPasswordSuccess('Password successfully updated!');
+      await changePassword(currentPassword, newPassword);
+      setPasswordSuccess('Password successfully updated with cryptographic hash!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');

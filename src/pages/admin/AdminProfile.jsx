@@ -51,7 +51,7 @@ export default function AdminProfile() {
     }
   };
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
     setPasswordSuccess('');
@@ -72,8 +72,8 @@ export default function AdminProfile() {
     }
 
     try {
-      changePassword(currentPassword, newPassword);
-      setPasswordSuccess('Password successfully updated!');
+      await changePassword(currentPassword, newPassword);
+      setPasswordSuccess('Password successfully updated with cryptographic hash!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
@@ -102,7 +102,7 @@ export default function AdminProfile() {
       {/* Profile Overview Card */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-subtle flex flex-col sm:flex-row items-center gap-6">
         <img
-          src={currentUser?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser?.fullName || 'Admin')}`}
+          src={currentUser?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser?.fullName || 'Manohar')}&backgroundColor=4f46e5`}
           alt=""
           className="w-20 h-20 rounded-2xl border-2 border-brand-500 shadow-md object-cover shrink-0"
         />
@@ -112,15 +112,15 @@ export default function AdminProfile() {
               {currentUser?.fullName}
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-              System Admin
+              {currentUser?.username?.toLowerCase() === 'manohar' ? 'Primary Admin & Owner' : 'System Admin'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {currentUser?.email}
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
+            Username: <strong className="text-brand-600 dark:text-brand-400">{currentUser?.username || 'Manohar'}</strong> • {currentUser?.email}
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 flex items-center justify-center sm:justify-start gap-1">
             <Building className="w-3.5 h-3.5 text-slate-400" />
-            {currentUser?.department || 'Institutional Faculty Office'}
+            {currentUser?.department || 'Academic Administration'}
           </p>
         </div>
         <button
